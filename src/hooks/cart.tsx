@@ -18,7 +18,7 @@ interface Product {
 
 interface CartContext {
   products: Product[];
-  addToCart(item: Product): void;
+  addToCart(item: Omit<Product, 'quantity'>): void;
   increment(id: string): void;
   decrement(id: string): void;
 }
@@ -41,7 +41,7 @@ const CartProvider: React.FC = ({ children }) => {
   }, []);
 
   const addToCart = useCallback(
-    async product => {
+    product => {
       const newProducts = [...products];
       const indexProduct = newProducts.findIndex(
         item => item.id === product.id,
@@ -53,27 +53,39 @@ const CartProvider: React.FC = ({ children }) => {
         newProducts[indexProduct].quantity += 1;
       }
 
+      console.log('addToCart', JSON.stringify(newProducts));
+      AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(newProducts));
       setProducts(newProducts);
-      await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(newProducts));
     },
     [products],
   );
 
   const increment = useCallback(
-    async id => {
+    id => {
       const newProducts = [...products];
       const indexProduct = newProducts.findIndex(product => product.id === id);
+
+      if (indexProduct === -1) {
+        return;
+      }
+
       newProducts[indexProduct].quantity += 1;
+
+      console.log('increment', JSON.stringify(newProducts));
+      AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(newProducts));
       setProducts(newProducts);
-      await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(newProducts));
     },
     [products],
   );
 
   const decrement = useCallback(
-    async id => {
+    id => {
       const newProducts = [...products];
       const indexProduct = newProducts.findIndex(product => product.id === id);
+
+      if (indexProduct === -1) {
+        return;
+      }
 
       if (newProducts[indexProduct].quantity > 1) {
         newProducts[indexProduct].quantity -= 1;
@@ -81,8 +93,9 @@ const CartProvider: React.FC = ({ children }) => {
         newProducts.splice(indexProduct, 1);
       }
 
+      console.log('decrement', JSON.stringify(newProducts));
+      AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(newProducts));
       setProducts(newProducts);
-      await AsyncStorage.setItem(KEY_PRODUCTS, JSON.stringify(newProducts));
     },
     [products],
   );
